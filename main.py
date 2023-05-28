@@ -1,30 +1,31 @@
 import os
-import shutil
 import io
-import time
-import sys
 import re
+# import sys
 import cv2
+import time
+import shutil
 import pickle
 import uvloop
 import zipfile
 import datetime
-import requests
-import posixpath
 import subprocess
-from urllib.parse import urlparse
 from PIL import Image
-from natsort import natsorted
-from IPython.display import clear_output
 from pyrogram import Client
+from natsort import natsorted
+from urllib.parse import urlparse
 from re import search as re_search
-from urllib.parse import parse_qs, urlparse
 from os import makedirs, path as ospath
+from IPython.display import clear_output
+from urllib.parse import parse_qs, urlparse
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
-from pyrogram.types import (ReplyKeyboardMarkup, InlineKeyboardMarkup,
-                            InlineKeyboardButton)
+from pyrogram.types import (
+    ReplyKeyboardMarkup,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 
 uvloop.install()
 
@@ -33,11 +34,6 @@ uvloop.install()
 #    Local OS Functions
 # =================================================================
 
-
-def get_time():
-    currentDateAndTime = datetime.datetime.now()
-    currentTime = currentDateAndTime.strftime("%H:%M:%S")
-    return currentTime
 
 def convert_seconds(seconds):
     seconds = int(seconds)
@@ -58,17 +54,15 @@ def convert_seconds(seconds):
         return f"{seconds}s"
 
 
-
 def size_measure(size):
-
     if size > 1024 * 1024 * 1024 * 1024:
-        siz = f"{size/(1024**4):.2f} TB"
+        siz = f"{size/(1024**4):.2f} TiB"
     elif size > 1024 * 1024 * 1024:
-        siz = f"{size/(1024**3):.2f} GB"
+        siz = f"{size/(1024**3):.2f} GiB"
     elif size > 1024 * 1024:
-        siz = f"{size/(1024**2):.2f} MB"
+        siz = f"{size/(1024**2):.2f} MiB"
     elif size > 1024:
-        siz = f"{size/1024:.2f} KB"
+        siz = f"{size/1024:.2f} KiB"
     else:
         siz = f"{size} B"
     return siz
@@ -121,7 +115,6 @@ def get_file_count(folder_path):
 
 
 def video_extension_fixer(file_path):
-
     dir_path, filename = os.path.split(file_path)
 
     if filename.endswith(".mp4") or filename.endswith(".mkv"):
@@ -130,15 +123,11 @@ def video_extension_fixer(file_path):
     else:
         # rename the video file with .mp4 extension
         name, ext = os.path.splitext(filename)
-        os.rename(
-            os.path.join(dir_path, filename), os.path.join(
-                dir_path, name + ".mp4")
-        )
+        os.rename(os.path.join(dir_path, filename), os.path.join(dir_path, name + ".mp4"))
         print(f"{filename} was changed to {name}.mp4")
 
 
 async def zip_folder(folder_path):
-
     output_path = folder_path + ".zip"
     # Calculate total size of folder to track progress
     total_size = 0
@@ -171,8 +160,7 @@ async def zip_folder(folder_path):
 
                     bar_length = 14
                     filled_length = int(percentage / 100 * bar_length)
-                    bar = "⬢" * filled_length + "⬡" * \
-                        (bar_length - filled_length)
+                    bar = "⬢" * filled_length + "⬡" * (bar_length - filled_length)
                     message = (
                         f"\n[{bar}] » {percentage:.2f}%"
                         + f"\n✅ DONE: __{size_measure(current_size)}__ OF __{size_measure(total_size)}__"
@@ -195,7 +183,6 @@ async def zip_folder(folder_path):
 
 
 async def extract_zip(zip_filepath):
-
     if not os.path.exists(temp_unzip_path):
         makedirs(temp_unzip_path)
 
@@ -209,8 +196,7 @@ async def extract_zip(zip_filepath):
             # print(f"Extracting {member.filename} ({member.file_size} bytes)")
             extracted_size += member.file_size
             zf.extract(member, temp_unzip_path)
-            percent_complete = (extracted_size / total_size) * \
-                100 if total_size else 0
+            percent_complete = (extracted_size / total_size) * 100 if total_size else 0
 
             down_msg = f"<b>📂 EXTRACTING:</b>\n\n<code>{d_name}</code>\n"
 
@@ -240,12 +226,10 @@ async def extract_zip(zip_filepath):
 
 
 async def size_checker(file_path):
-
     max_size = 2097152000  # 2 GB
     file_size = os.stat(file_path).st_size
 
     if file_size > max_size:
-
         print(f"File size is {size_measure(file_size)} SPLITTING.......")
 
         if not ospath.exists(temp_lpath):
@@ -255,9 +239,7 @@ async def size_checker(file_path):
 
         return True
     else:
-
-        print(
-            f"File size is {size_measure(file_size)} MB. NOT SPLITTING.......")
+        print(f"File size is {size_measure(file_size)} MB. NOT SPLITTING.......")
         return False
 
 
@@ -451,7 +433,6 @@ async def wgetDownload(link):
 
 
 def build_service():
-
     # create credentials object from token.pickle file
     creds = None
     if os.path.exists("/content/token.pickle"):
@@ -479,7 +460,6 @@ async def g_DownLoad(link):
     d_fol_path = f"{d_path}/{d_name}"
 
     if meta.get("mimeType") == "application/vnd.google-apps.folder":
-
         folder_info[0] = get_Gfolder_size(file_id)
         print(f"\nTotal Download size is: {size_measure(folder_info[0])}")
         current_time[0] = time.time()
@@ -489,7 +469,6 @@ async def g_DownLoad(link):
         print("*" * 40 + "\n Folder Download Complete\n" + "*" * 40)
 
     else:
-
         file_metadata = getFileMetadata(file_id)
         folder_info[0] = int(
             file_metadata["size"]
@@ -589,7 +568,6 @@ def get_Gfolder_size(folder_id):
 
 
 async def downloadProgress(file_size):
-
     global start_time
 
     down_done = sum(down_bytes) + file_size
@@ -654,7 +632,6 @@ async def gDownloadFile(file_id, path):
                 "Sorry, the specified ID is for a Google Docs, Sheets, Slides, or Forms document. You can only download these types of files in specific formats."
             )
         else:
-
             try:
                 file_name = file.get("name", f"untitleddrivefile_{file_id}")
                 file_name = os.path.join(path, file_name)
@@ -671,8 +648,7 @@ async def gDownloadFile(file_id, path):
                 done = False
                 while done is False:
                     status, done = file_downloader.next_chunk()
-                    print(
-                        f"Download progress: {int(status.progress() * 100)}%")
+                    print(f"Download progress: {int(status.progress() * 100)}%")
                     # Get current value from file_contents.
                     file_contents.seek(0)
                     with open(file_name, "ab") as f:
@@ -694,7 +670,6 @@ async def gDownloadFile(file_id, path):
 
 
 async def gDownloadFolder(folder_id, path):
-
     folder_meta = getFileMetadata(folder_id)
     folder_name = folder_meta["name"]
     if not ospath.exists(f"{path}/{folder_name}"):
@@ -724,7 +699,6 @@ async def gDownloadFolder(folder_id, path):
 
 
 async def progress_bar(current, total):
-
     global start_time
 
     speed_string = ""
@@ -774,22 +748,19 @@ async def progress_bar(current, total):
 
 
 async def upload_file(file_path, type, file_name):
-
     global sent
     # Upload the file
     try:
-
         caption = f"<code>{file_name}</code>"
 
         if type == "video":
-
             with Image.open(thumb_path) as img:
                 width, height = img.size
 
             data = cv2.VideoCapture(file_path)
             frames = data.get(cv2.CAP_PROP_FRAME_COUNT)
             fps = data.get(cv2.CAP_PROP_FPS)
-            seconds=0
+            seconds = 0
             if fps != 0:
                 seconds = round(frames / fps)
 
@@ -806,7 +777,6 @@ async def upload_file(file_path, type, file_name):
             )
 
         elif type == "audio":
-
             sent = await sent.reply_audio(
                 audio=file_path,
                 supports_streaming=True,
@@ -817,7 +787,6 @@ async def upload_file(file_path, type, file_name):
             )
 
         elif type == "document":
-
             sent = await sent.reply_document(
                 document=file_path,
                 caption=caption,
@@ -827,7 +796,6 @@ async def upload_file(file_path, type, file_name):
             )
 
         elif type == "photo":
-
             sent = await sent.reply_photo(
                 photo=file_path,
                 caption=caption,
@@ -846,7 +814,6 @@ async def upload_file(file_path, type, file_name):
 
 
 async def Leecher(file_path):
-
     global text_msg, start_time, msg, sent
 
     file_type = get_file_type(file_path)
@@ -855,7 +822,6 @@ async def Leecher(file_path):
     leech = await size_checker(file_path)
 
     if leech:  # File was splitted
-
         if ospath.exists(file_path):
             os.remove(file_path)  # Delete original Big Zip file
         print("Big Zip File Deleted !")
@@ -866,7 +832,6 @@ async def Leecher(file_path):
         count = 1
 
         for dir_path in dir_list:
-
             short_path = os.path.join(temp_lpath, dir_path)
             file_type = get_file_type(short_path)
             file_name = os.path.basename(short_path)
@@ -887,7 +852,6 @@ async def Leecher(file_path):
         shutil.rmtree(temp_lpath)
 
     else:
-
         file_type = get_file_type(file_path)
         file_name = os.path.basename(file_path)
         print(f"\nNow uploading {file_name}\n")
@@ -904,7 +868,6 @@ async def Leecher(file_path):
 
 
 async def Leech(folder_path):
-
     global sent
 
     dump_text = (
@@ -924,7 +887,6 @@ async def Leech(folder_path):
 
 
 async def ZipLeech(d_fol_path):
-
     global msg, down_msg, start_time, d_name, total_down_size, sent
 
     down_msg = f"\n<b>🔐 ZIPPING:</b>\n\n<code>{d_name}</code>\n"
@@ -972,7 +934,6 @@ async def ZipLeech(d_fol_path):
 
 
 async def UnzipLeech(d_fol_path):
-
     global msg
 
     down_msg = f"\n<b>📂 UNZIPPING:</b>\n\n<code>{d_name}</code>\n"
@@ -1004,11 +965,9 @@ async def UnzipLeech(d_fol_path):
 
 
 async def FinalStep():
-
     final_text = f"<b>📂 Total Files:</b>  <code>{len(sent_file)}</code>\n\n<b>📜 LOG:</b>\n"
 
     for i in range(len(sent_file)):
-
         file_link = f"https://t.me/c/{link_p}/{sent_file[i].id}"
         fileName = sent_fileName[i]
         fileText = f"\n{i+1}. <a href={file_link}>{fileName}</a>"
@@ -1073,7 +1032,6 @@ if not ospath.exists(d_path):
 async with Client(
     "my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token
 ) as bot:
-
     while True:
         choice = input(
             "Choose the Operation: \n\t(1) Leech\n\t(2) Zipleech\n\t(3) Unzipleech\n\nEnter: "
@@ -1109,7 +1067,6 @@ async with Client(
         ))
 
         sent = msg
-        
 
         if "drive.google.com" in link:
             await g_DownLoad(link)
@@ -1132,7 +1089,6 @@ async with Client(
         await FinalStep()
 
     except Exception as e:
-
         if "Failed to retrieve" in str(e):
             clear_output()
             print("Authorization Error with token.pickle ! Maybe file not present !")
