@@ -585,7 +585,7 @@ async def downloadProgress(file_size):
     eta = (folder_info[0] - down_done) / down_speed
     eta = convert_seconds(eta)
 
-    down_msg = f"<b>📥 DOWNLOADING: {down_count[0]} Files</b>\n\n<code>{d_name}</code>\n"
+    down_msg = f"<b>📥 DOWNLOADING: </b>\n\n<code>{d_name}</code>\n"
 
     percentage = down_done / folder_info[0] * 100
     bar_length = 14
@@ -863,7 +863,7 @@ async def Leecher(file_path):
         print(f"\nNow uploading {file_name}\n")
         start_time = datetime.datetime.now()
         current_time[0] = time.time()
-        text_msg = f"<b>📤 UPLOADING: 1 File</b>\n\n<code>{file_name}</code>\n"
+        text_msg = f"<b>📤 UPLOADING:</b>\n\n<code>{file_name}</code>\n"
         msg = await bot.edit_message_text(
             chat_id=chat_id, message_id=msg.id, text=text_msg + "\n⏳ __Starting.....__"
         )
