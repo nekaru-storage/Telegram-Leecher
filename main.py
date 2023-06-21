@@ -873,17 +873,7 @@ async def Leech(folder_path):
         + f"\n\n<b>📂 Total Files:</b>  <code>{get_file_count(folder_path)}</code>\n"
     )
 
-    sent = await bot.send_photo(chat_id=dump_id, photo=thumb_path, caption=dump_text,
-                                reply_markup=InlineKeyboardMarkup(
-                                    [
-                                        [  # First row
-                                            InlineKeyboardButton(  # Opens a web URL
-                                                "Source URL 🔗",
-                                                url=link
-                                            )
-                                        ]
-                                    ]
-    ))
+    sent = await bot.send_photo(chat_id=dump_id, photo=thumb_path, caption=dump_text)
 
     for dirpath, dirnames, filenames in os.walk(folder_path):
         for f in natsorted(filenames):
