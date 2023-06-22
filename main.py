@@ -8,6 +8,7 @@ import cv2
 import glob
 import time
 import psutil
+import asyncio # idk
 import shutil
 import pickle
 import uvloop
@@ -20,6 +21,7 @@ from natsort import natsorted
 from urllib.parse import urlparse
 from re import search as re_search
 from os import makedirs, path as ospath
+from mutagen import File
 from IPython.display import clear_output
 from urllib.parse import parse_qs, urlparse
 from googleapiclient.discovery import build
@@ -821,9 +823,13 @@ async def upload_file(file_path, type, file_name):
             )
 
         elif type == "audio":
+            duration, artist, title = get_audio_metadata(file_path)
             sent = await sent.reply_audio(
                 audio=file_path,
                 caption=caption,
+                performer=artist,
+                title=title,
+                duration=duration,
                 thumb=thumb_path,
                 progress=progress_bar,
                 reply_to_message_id=sent.id,
@@ -839,12 +845,33 @@ async def upload_file(file_path, type, file_name):
             )
 
         elif type == "photo":
-            sent = await sent.reply_photo(
-                photo=file_path,
-                caption=caption,
-                progress=progress_bar,
-                reply_to_message_id=sent.id,
-            )
+            photo_width, photo_height = get_image_dimensions(file_path)
+            file_size = get_file_size(file_path)
+            if photo_width * photo_height <= 10000 and file_size <= 10 * 1024 * 1024:
+                sent = await sent.reply_photo(
+                    photo=file_path,
+                    caption=caption,
+                    progress=progress_bar,
+                    reply_to_message_id=sent.id,
+                )
+                if photo_width == 10000 and photo_height == 10000:
+                    # Create a duplicate file for archiving purposes
+                    duplicate_path = create_duplicate_file(file_path)
+                    await asyncio.sleep(15)  # Delay for 15 seconds
+                    sent = await sent.reply_document(
+                        document=duplicate_path,
+                        caption="Archived Photo",
+                        progress=progress_bar,
+                        reply_to_message_id=sent.id,  # Reply to the original image
+                    )
+            else:
+                sent = await sent.reply_document(
+                    document=file_path,
+                    caption=caption,
+                    thumb=thumb_path,
+                    progress=progress_bar,
+                    reply_to_message_id=sent.id,
+                )
 
         clear_output()
 
@@ -855,6 +882,30 @@ async def upload_file(file_path, type, file_name):
     except Exception as e:
         print(e)
 
+def get_audio_metadata(file_path):
+    audio = File(file_path)
+    duration = round(float(audio.info.length)) if audio and audio.info.length else 0
+    artist = audio.get("artist", [None])[0]
+    title = audio.get("title", [None])[0]
+    return duration, artist, title
+
+def get_image_dimensions(file_path):
+    with Image.open(file_path) as img:
+        return img.size
+
+def get_file_size(file_path):
+    try:
+        size = os.path.getsize(file_path)
+        return size
+    except OSError:
+        return 0
+
+def create_duplicate_file(file_path):
+    duplicate_path = "duplicate_" + os.path.basename(file_path)
+    with open(file_path, 'rb') as file:
+        with open(duplicate_path, 'wb') as duplicate_file:
+            duplicate_file.write(file.read())
+    return duplicate_path
 
 async def Leecher(file_path):
     global text_msg, start_time, msg, sent

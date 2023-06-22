@@ -8,3 +8,4 @@ requests
 tgcrypto
 uvloop
 opencv-python
+mutagen 
