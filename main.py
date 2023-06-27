@@ -1162,19 +1162,20 @@ while link.lower() != "c":
         links.append(link)
 
 task_start = datetime.datetime.now()
-down_msg = f"<b>📥 DOWNLOADING » </b>\n\n<code>{d_name}</code>\n"
-task_msg = f"<b>🦞 TASK MODE »</b> <i>{task} as {leech_type}</i>\n\n<b>🖇️ SOURCES » </b>"
+down_msg = f"<b>📥 DOWNLOADING » </b>\n"
+task_msg = f"<b>🦞 TASK MODE » </b><i>{task} as {leech_type}</i>\n\n"
+
+dump_task = task_msg + "<b>🖇️ SOURCES » </b>\n"
 
 for a in range(len(links)):
     if "magnet" in links[a]:
         proxy_magnet = "https://mag.net/" + links[a]
-        task_msg += f"<a href={proxy_magnet}>🔗{str(a+1).zfill(2)}</a> "
+        dump_task += f"\n<a href={proxy_magnet}>🔗 Link {str(a+1).zfill(2)}</a>"
     else:
-        task_msg += f"<a href={links[a]}>🔗{str(a+1).zfill(2)}</a> "
+        dump_task += f"\n<a href={links[a]}>🔗 Link {str(a+1).zfill(2)}</a>"
 
-task_msg += "\n\n"
+dump_task += "\n\n"
 clear_output()
-
 
 async with Client(
     "my_bot", api_id=api_id, api_hash=API_HASH, bot_token=BOT_TOKEN
