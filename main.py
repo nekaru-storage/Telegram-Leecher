@@ -1239,14 +1239,18 @@ task_start = datetime.datetime.now()
 down_msg = f"<b>📥 DOWNLOADING » </b>\n"
 task_msg = f"<b>🦞 TASK MODE » </b><i>{task} as {leech_type}</i>\n\n"
 
-dump_task = task_msg + "<b>🖇️ SOURCES » </b>\n"
+dump_task = task_msg + "<b>🖇️ SOURCES » </b>"
 
-for a in range(len(links)):
-    if "magnet" in links[a]:
-        proxy_magnet = "https://mag.net/" + links[a]
-        dump_task += f"\n<a href={proxy_magnet}>🔗 Link {str(a+1).zfill(2)}</a>"
+for link in links:
+    if "t.me" in link:
+        ida = "💬"
+    elif "drive.google.com" in link:
+        ida = "♻️"
+    elif "magnet" in link or "torrent" in link:
+        ida = "🧲"
     else:
-        dump_task += f"\n<a href={links[a]}>🔗 Link {str(a+1).zfill(2)}</a>"
+        ida = "🔗"
+    dump_task += f"\n\n{ida} <code>{link}</code>"
 
 dump_task += "\n\n"
 clear_output()
