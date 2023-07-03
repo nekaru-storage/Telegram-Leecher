@@ -1278,7 +1278,6 @@ for link in links:
     dump_task += f"\n\n{ida} <code>{link}</code>"
 
 dump_task += "\n\n"
-clear_output()
 if not ospath.exists(d_fol_path):
     makedirs(d_fol_path)
     
