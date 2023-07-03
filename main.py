@@ -5,7 +5,6 @@ import re
 
 # import sys
 import cv2
-import glob
 import time
 import psutil
 import asyncio # idk
@@ -573,11 +572,11 @@ def calG_DownSize(links):
 
 
 async def g_DownLoad(link, num):
-    global start_time, down_msg, d_fol_path, d_name
+    global start_time, down_msg
     down_msg = f"<b>📥 DOWNLOADING FROM » </b><i>🔗Link {str(num).zfill(2)}</i>\n\n<b>🏷️ Name » </b><code>{d_name}</code>\n"
     file_id = getIDFromURL(link)
     meta = getFileMetadata(file_id)
-    d_name = meta["name"]
+
     if meta.get("mimeType") == "application/vnd.google-apps.folder":
         print(f"\nTotal Download size is: {size_measure(folder_info[0])}")
         await gDownloadFolder(file_id, d_fol_path)
@@ -589,6 +588,7 @@ async def g_DownLoad(link, num):
         await gDownloadFile(file_id, d_fol_path)
         clear_output()
         print("*" * 40 + "\n File Download Complete\n" + "*" * 40)
+
 
 
 def getIDFromURL(link: str):
@@ -1194,6 +1194,9 @@ while link.lower() != "c":
     if link.lower() != "c":
         links.append(link)
 
+# enter the link for the file or folder that youwant to download	
+d_name = input("Enter the name of the File/Folder: ")
+
 task_start = datetime.datetime.now()
 down_msg = f"<b>📥 DOWNLOADING » </b>\n"
 task_msg = f"<b>🦞 TASK MODE » </b><i>{task} as {leech_type}</i>\n\n"
@@ -1209,7 +1212,10 @@ for a in range(len(links)):
 
 dump_task += "\n\n"
 clear_output()
-
+d_fol_path = f"{d_path}/{d_name}"
+if not ospath.exists(d_fol_path):
+    makedirs(d_fol_path)
+    
 async with Client(
     "my_bot", api_id=api_id, api_hash=API_HASH, bot_token=BOT_TOKEN
 ) as bot:
