@@ -157,7 +157,6 @@ def Thumbnail_Maintainer(file_path):
         print(f"Thmb Gen ERROR: {e}")
         return thumb_path, 0
 
-
 def Thumbnail_Checker(dir_path):
     for filename in os.listdir(dir_path):
         if filename.endswith(".jpg"):
@@ -165,7 +164,6 @@ def Thumbnail_Checker(dir_path):
             return True
     # No jpg file was found
     return False
-
 
 def system_info():
     ram_usage = psutil.Process(os.getpid()).memory_info().rss
@@ -866,7 +864,7 @@ async def progress_bar(current, total):
     )
 
 
-async def upload_file(file_path, type):
+async def upload_file(file_path, type, real_name):
     global sent
 
     caption = f"<code>{real_name}</code>"
@@ -894,9 +892,13 @@ async def upload_file(file_path, type):
 
         elif f_type == "audio":
             thmb_path = None if not os.path.exists(custom_thumb) else custom_thumb
+            duration, artist, title = get_audio_metadata(file_path)
             sent = await sent.reply_audio(
                 audio=file_path,
                 caption=caption,
+                performer=artist,
+                title=title,
+                duration=duration,
                 thumb=thmb_path,
                 progress=progress_bar,
                 reply_to_message_id=sent.id,
@@ -919,12 +921,33 @@ async def upload_file(file_path, type):
             )
 
         elif f_type == "photo":
-            sent = await sent.reply_photo(
-                photo=file_path,
-                caption=caption,
-                progress=progress_bar,
-                reply_to_message_id=sent.id,
-            )
+            photo_width, photo_height = get_image_dimensions(file_path)
+            file_size = get_file_size(file_path)
+            if photo_width * photo_height <= 10000 and file_size <= 10 * 1024 * 1024:
+                sent = await sent.reply_photo(
+                    photo=file_path,
+                    caption=caption,
+                    progress=progress_bar,
+                    reply_to_message_id=sent.id,
+                )
+                if photo_width == 10000 and photo_height == 10000:
+                    # Create a duplicate file for archiving purposes
+                    duplicate_path = create_duplicate_file(file_path)
+                    await asyncio.sleep(15)  # Delay for 15 seconds
+                    sent = await sent.reply_document(
+                        document=duplicate_path,
+                        caption="Archived Photo",
+                        progress=progress_bar,
+                        reply_to_message_id=sent.id,  # Reply to the original image
+                    )
+            else:
+                sent = await sent.reply_document(
+                    document=file_path,
+                    caption=caption,
+                    thumb=thumb_path,
+                    progress=progress_bar,
+                    reply_to_message_id=sent.id,
+                )
 
         clear_output()
 
@@ -932,7 +955,7 @@ async def upload_file(file_path, type):
         sent_fileName.append(real_name)
 
     except Exception as e:
-        print(f"Error When Uploading : {e}")
+        print(f"Error When Uploading: {e}")
 
 def get_audio_metadata(file_path):
     audio = File(file_path)
@@ -951,6 +974,7 @@ def get_file_size(file_path):
         return size
     except OSError:
         return 0
+
 
 def create_duplicate_file(file_path):
     duplicate_path = "duplicate_" + os.path.basename(file_path)
