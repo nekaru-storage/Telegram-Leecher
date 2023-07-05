@@ -160,7 +160,7 @@ def Thumbnail_Maintainer(file_path):
 
 def Thumbnail_Checker(dir_path):
     for filename in os.listdir(dir_path):
-        if filename.endswith(".jpg"):
+        if filename.endswith(".jpg") or filename.endswith(".jpeg"):
             os.rename(os.path.join(dir_path, filename), custom_thumb)
             return True
     # No jpg file was found
@@ -265,7 +265,6 @@ async def extract_zip(zip_filepath):
         na_p = name_ + ".part" + str(c) + ".rar"
         p_ap = os.path.join(dirname, na_p)
         while os.path.exists(p_ap):
-            print("\nDeleted: ", p_ap)
             os.remove(p_ap)
             c += 1
             na_p = name_ + ".part" + str(c) + ".rar"
@@ -275,7 +274,6 @@ async def extract_zip(zip_filepath):
         na_p = name + "." + str(c).zfill(3)
         p_ap = os.path.join(dirname, na_p)
         while os.path.exists(p_ap):
-            print("\nDeleted: ", p_ap)
             os.remove(p_ap)
             c += 1
             na_p = name + "." + str(c).zfill(3)
@@ -285,12 +283,10 @@ async def extract_zip(zip_filepath):
         na_p = name + ".zip"
         p_ap = os.path.join(dirname, na_p)
         if os.path.exists(p_ap):
-            print("\nDeleted: ", p_ap)
             os.remove(p_ap)
         na_p = name + ".z" + str(c).zfill(2)
         p_ap = os.path.join(dirname, na_p)
         while os.path.exists(p_ap):
-            print("Deleted: ", p_ap)
             os.remove(p_ap)
             c += 1
             na_p = name + ".z" + str(c).zfill(2)
@@ -451,6 +447,7 @@ async def aria2_Download(link, num):
         "-x16",
         "--seed-time=0",
         "--summary-interval=1",
+        "--max-tries=3",
         "--console-log-level=notice",
         "-d",
         d_fol_path,
@@ -483,7 +480,7 @@ async def aria2_Download(link, num):
         elif exit_code == 24:
             raise Exception(f"HTTP authorization failed.")
         else:
-        raise Exception(
+            raise Exception(
                 f"aria2c download failed with return code {exit_code} for {link}.\nError: {error_output}"
             )
 
@@ -1060,6 +1057,8 @@ async def Leecher(file_path):
 
 
 async def Leech(folder_path):
+    global total_down_size
+    total_down_size = get_folder_size(folder_path)
     files = [str(p) for p in pathlib.Path(folder_path).glob("**/*") if p.is_file()]
     for f in natsorted(files):
         file_path = os.path.join(folder_path, f)
@@ -1139,6 +1138,37 @@ async def UnzipLeech(d_fol_path):
     shutil.rmtree(d_fol_path)
 
 
+async def UnDZipLeech(folder_path):
+    global msg, down_msg, start_time, total_down_size
+
+    down_msg = f"\n<b>📂 EXTRACTING » </b>\n\n<code>{d_name}</code>\n"
+
+    msg = await bot.edit_message_text(
+        chat_id=chat_id,
+        message_id=msg.id,
+        text=task_msg + down_msg + "\n⏳ __Starting.....__" + system_info(),
+    )
+
+    filenames = [str(p) for p in pathlib.Path(folder_path).glob("**/*") if p.is_file()]
+    for f in natsorted(filenames):
+        short_path = os.path.join(folder_path, f)
+        if not os.path.exists(temp_unzip_path):
+            makedirs(temp_unzip_path)
+        filename = os.path.basename(f).lower()
+        _, ext = os.path.splitext(filename)
+        try:
+            if os.path.exists(short_path):
+                if ext in [".7z", ".gz", ".zip", ".rar", ".001", ".tar", ".z01"]:
+                    await extract_zip(short_path)
+                else:
+                    shutil.move(short_path, temp_unzip_path)
+        except Exception as e5:
+            print(f"UnDZLeech Launcher Exception: {e5}")
+
+    shutil.rmtree(folder_path)
+    await ZipLeech(temp_unzip_path)
+
+
 async def FinalStep(msg):
     final_text = (
         f"<b>📂 Total Files:</b>  <code>{len(sent_file)}</code>\n\n<b>📜 LOG:</b>\n"
@@ -1147,6 +1177,7 @@ async def FinalStep(msg):
         f"\n\n<b>{(task).upper()} COMPLETE 🔥</b>\n\n"
         + f"╭<b>📛 Name » </b>  <code>{d_name}</code>\n"
         + f"├<b>📦 Size » </b><code>{size_measure(sum(up_bytes))}</code>\n"
+        + f"├<b>☘️ File Count » </b><code>{len(sent_file)} Files</code>\n"
         + f"╰<b>🍃 Saved Time »</b> <code>{convert_seconds((datetime.datetime.now() - task_start).seconds)}</code>"
     )
     src = f"**SOURCE »** __[Links]({src_link})__"
@@ -1192,13 +1223,13 @@ async def FinalStep(msg):
 # ****************************************************************
 api_id, chat_id, dump_id = int(API_ID), int(CHAT_ID), int(DUMP_ID)
 link_p = str(dump_id)[4:]
-custom_thumb = "/content/thmb.jpg"
+custom_thumb = "/content/Thumbnail.jpg"
 d_path = "/content/bot_Folder"
 d_name = ""
 link_info = False
 d_fol_path = f"{d_path}/Downloads"
 temp_lpath = f"{d_path}/Leeched_Files"
-temp_unzip_path = f"{d_path}/Unzipped_Files/"
+temp_unzip_path = f"{d_path}/Unzipped_Files"
 temp_zpath = temp_lpath
 sent_file = []
 sent_fileName = []
@@ -1232,12 +1263,12 @@ else:
     makedirs(d_path)
 
 if len(LEECH_MODE) == 0:
-    while choice not in ["1", "2", "3", "l", "z", "u"]:
+    while choice not in ["1", "2", "3", "l", "z", "u", "4", "d"]:
         choice = input(
-            "Choose the Operation:\n\n\t[1 / L] Leech\n\t[2 / Z] Zipleech\n\t[3 / U] Unzipleech\n\nEnter: "
+            "Choose the Operation:\n\n\t[1 / L] Leech\n\t[2 / Z] Zipleech\n\t[3 / U] Unzipleech\n\t[4 / D] UnDoubleZipLeech\n\nEnter: "
         ).lower()
         clear_output()
-        if choice not in ["1", "2", "3", "l", "z", "u"]:
+        if choice not in ["1", "2", "3", "l", "z", "u", "4", "d"]:
             print(f"No Such Leech Mode '{choice}' ! Enter Option Correctly 🦥\n")
 else:
     choice = LEECH_MODE.lower()
@@ -1246,8 +1277,10 @@ if choice == "1" or choice == "l":
     task = "Leech"
 elif choice == "2" or choice == "z":
     task = "Zipleech"
-else:
+elif choice == "3" or choice == "u":
     task = "Unzipleech"
+else:
+    task = "UnDoubleZipleech"
 leech_type = "Document" if LEECH_DOCUMENT else "Media"
 
 time.sleep(1)
@@ -1273,7 +1306,7 @@ else:
 d_name, custom_name = "", ""
 
 if len(LEECH_MODE) + len(D_LINK) + len(C_NAME) == 0:  # Making Sure, he is in Desktop
-    if choice in ["2", "z"] or (len(links) == 1 and choice in ["1", "l"]):
+    if choice in ["2", "z", "4", "d"] or (len(links) == 1 and choice in ["1", "l"]):
         custom_name = input("Enter Custom File name [ 'D' to set Default ]: ")
     else:
         print("Custom Name Not Applicable")
@@ -1369,12 +1402,12 @@ async with Client(
 
         if choice == "1" or choice == "l":
             await Leech(d_fol_path)
-
         elif choice == "2" or choice == "z":
             await ZipLeech(d_fol_path)
-
-        else:
+        elif choice == "3" or choice == "u":
             await UnzipLeech(d_fol_path)
+        else:
+            await UnDZipLeech(d_fol_path)
 
         await FinalStep(msg)
 
