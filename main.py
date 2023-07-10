@@ -943,14 +943,15 @@ async def upload_file(file_path, real_name):
         elif f_type == "photo":
             photo_width, photo_height = get_image_dimensions(file_path)
             file_size = get_file_size(file_path)
-            if photo_width * photo_height <= 10000 and file_size <= 10 * 1024 * 1024:
+            width_height_total = photo_width + photo_height
+            if file_size <= 10 * 1024 * 1024 and width_height_total <= 10000 and photo_width / photo_height <= 20:
                 sent = await sent.reply_photo(
                     photo=file_path,
                     caption=caption,
                     progress=progress_bar,
                     reply_to_message_id=sent.id,
                 )
-                if photo_width == 10000 and photo_height == 10000:
+                if width_height_total == 10000:
                     # Create a duplicate file for archiving purposes
                     duplicate_path = create_duplicate_file(file_path)
                     await asyncio.sleep(15)  # Delay for 15 seconds
@@ -968,6 +969,7 @@ async def upload_file(file_path, real_name):
                     progress=progress_bar,
                     reply_to_message_id=sent.id,
                 )
+
 
         clear_output()
 
