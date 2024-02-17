@@ -299,18 +299,23 @@ def speedETA(start, done, total):
         speed, eta = "N/A", 0
     return speed, eta, percentage
 
-def get_audio_metadata(file_path):
+async def get_audio_metadata(file_path):
     audio = File(file_path)
-    duration = round(float(audio.info.length)) if audio and audio.info.length else 0
-    artist = audio.get("artist", [None])[0]
-    title = audio.get("title", [None])[0]
+    if audio is None:
+        return 0, None, None  # Return default values if file is not valid
+
+    duration = round(float(audio.info.length))
+    tags = audio.tags
+    artist = tags.get("artist") or tags.get("ARTIST") or tags.get("Artist")
+    title = tags.get("title") or tags.get("TITLE") or tags.get("Title")
     return duration, artist, title
 
-def get_image_dimensions(file_path):
+
+async def get_image_dimensions(file_path):
     with Image.open(file_path) as img:
         return img.size
 
-def get_file_size(file_path):
+async def get_file_size(file_path):
     try:
         return os.path.getsize(file_path)
     except OSError:
