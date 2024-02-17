@@ -63,7 +63,7 @@ async def upload_file(file_path, real_name):
 
         elif f_type == "audio":
             thmb_path = None if not ospath.exists(Paths.THMB_PATH) else Paths.THMB_PATH
-            duration, artist, title = await get_audio_metadata(file_path)
+            duration, artist, title = get_audio_metadata(file_path)
             MSG.sent_msg = await MSG.sent_msg.reply_audio(
                 audio=file_path,
                 caption=caption,
@@ -93,8 +93,8 @@ async def upload_file(file_path, real_name):
 
         elif f_type == "photo":
             thmb_path = None if not ospath.exists(Paths.THMB_PATH) else Paths.THMB_PATH
-            photo_width, photo_height = await get_image_dimensions(file_path)
-            file_size = await get_file_size(file_path)
+            photo_width, photo_height = get_image_dimensions(file_path)
+            file_size = get_file_size(file_path)
             width_height_total = photo_width + photo_height
             if file_size <= 10 * 1024 * 1024 and width_height_total <= 10000 and photo_width / photo_height <= 20:
                 MSG.sent_msg = await MSG.sent_msg.reply_photo(

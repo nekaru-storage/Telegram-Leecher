@@ -75,7 +75,10 @@ async def taskScheduler():
                 ida = "🏮"
             else:
                 ida = "🔗"
-            code_link = f"\n\n{ida} <code>{link}</code>"
+            if "drive.google.com" in link:
+                code_link = f"\n\n{ida}"
+            else:
+                code_link = f"\n\n{ida} <code>{link}</code>"
             if len(Messages.dump_task + code_link) >= 4096:
                 src_text.append(Messages.dump_task)
                 Messages.dump_task = code_link
