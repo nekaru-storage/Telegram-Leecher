@@ -1,6 +1,7 @@
 # copyright 2023 © Xron Trix | https://github.com/Xrontrix10
 
 
+import asyncio
 import logging
 from PIL import Image
 from asyncio import sleep
@@ -8,7 +9,7 @@ from os import path as ospath
 from datetime import datetime
 from pyrogram.errors import FloodWait
 from colab_leecher.utility.variables import BOT, Transfer, BotTimes, Messages, MSG, Paths
-from colab_leecher.utility.helper import sizeUnit, fileType, getTime, status_bar, thumbMaintainer, videoExtFix
+from colab_leecher.utility.helper import create_duplicate_file, get_audio_metadata, get_file_size, get_image_dimensions, sizeUnit, fileType, getTime, status_bar, thumbMaintainer, videoExtFix
 
 async def progress_bar(current, total):
     global status_msg, status_head
@@ -62,9 +63,13 @@ async def upload_file(file_path, real_name):
 
         elif f_type == "audio":
             thmb_path = None if not ospath.exists(Paths.THMB_PATH) else Paths.THMB_PATH
+            duration, artist, title = get_audio_metadata(file_path)
             MSG.sent_msg = await MSG.sent_msg.reply_audio(
                 audio=file_path,
                 caption=caption,
+                performer=artist,
+                title=title,
+                duration=duration,
                 thumb=thmb_path,  # type: ignore
                 progress=progress_bar,
                 reply_to_message_id=MSG.sent_msg.id,
@@ -87,12 +92,36 @@ async def upload_file(file_path, real_name):
             )
 
         elif f_type == "photo":
-            MSG.sent_msg = await MSG.sent_msg.reply_photo(
-                photo=file_path,
-                caption=caption,
-                progress=progress_bar,
-                reply_to_message_id=MSG.sent_msg.id,
-            )
+            thmb_path = None if not ospath.exists(Paths.THMB_PATH) else Paths.THMB_PATH
+            photo_width, photo_height = get_image_dimensions(file_path)
+            file_size = get_file_size(file_path)
+            width_height_total = photo_width + photo_height
+            if file_size <= 10 * 1024 * 1024 and width_height_total <= 10000 and photo_width / photo_height <= 20:
+                MSG.sent_msg = await MSG.sent_msg.reply_photo(
+                    photo=file_path,
+                    caption=caption,
+                    progress=progress_bar,
+                    reply_to_message_id=MSG.sent_msg.id,
+                )
+                if width_height_total == 10000:
+                    # Create a duplicate file for archiving purposes
+                    duplicate_path = create_duplicate_file(file_path)
+                    await asyncio.sleep(15)  # Delay for 15 seconds
+                    MSG.sent_msg = await MSG.sent_msg.reply_document(
+                        document=duplicate_path,
+                        caption="Archived Photo",
+                        progress=progress_bar,
+                        reply_to_message_id=MSG.sent_msg.id,  # Reply to the original image
+                    )
+            else:
+                MSG.sent_msg = await MSG.sent_msg.reply_document(
+                    document=file_path,
+                    caption=caption,
+                    progress=progress_bar,
+                    thumb=thmb_path, # type: ignore
+                    reply_to_message_id=MSG.sent_msg.id,
+                )
+
 
         Transfer.sent_file.append(MSG.sent_msg)
         Transfer.sent_file_names.append(real_name)

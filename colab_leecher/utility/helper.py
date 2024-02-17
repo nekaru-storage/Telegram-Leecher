@@ -7,6 +7,7 @@ import psutil
 import logging
 from time import time
 from PIL import Image
+from mutagen import File
 from os import path as ospath
 from datetime import datetime
 from urllib.parse import urlparse
@@ -112,17 +113,14 @@ def shortFileName(path):
             basename = basename[: 60 - len(ext)]
             filename = basename + ext
             path = ospath.join(dir_path, filename)
-        return path
     elif ospath.isdir(path):
         dir_path, dirname = ospath.split(path)
         if len(dirname) > 60:
             dirname = dirname[:60]
             path = ospath.join(dir_path, dirname)
-        return path
-    else:
-        if len(path) > 60:
-            path = path[:60]
-        return path
+    elif len(path) > 60:
+        path = path[:60]
+    return path
 
 
 def getSize(path):
@@ -301,6 +299,29 @@ def speedETA(start, done, total):
         speed, eta = "N/A", 0
     return speed, eta, percentage
 
+def get_audio_metadata(file_path):
+    audio = File(file_path)
+    duration = round(float(audio.info.length)) if audio and audio.info.length else 0
+    artist = audio.get("artist", [None])[0]
+    title = audio.get("title", [None])[0]
+    return duration, artist, title
+
+def get_image_dimensions(file_path):
+    with Image.open(file_path) as img:
+        return img.size
+
+def get_file_size(file_path):
+    try:
+        return os.path.getsize(file_path)
+    except OSError:
+        return 0
+
+def create_duplicate_file(file_path):
+    duplicate_path = "duplicate_" + os.path.basename(file_path)
+    with open(file_path, 'rb') as file:
+        with open(duplicate_path, 'wb') as duplicate_file:
+            duplicate_file.write(file.read())
+    return duplicate_path
 
 async def message_deleter(message1, message2):
     try:
