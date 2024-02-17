@@ -306,7 +306,6 @@ def get_audio_metadata(file_path):
     title = audio.get("title", [None])[0]
     return duration, artist, title
 
-
 def get_image_dimensions(file_path):
     with Image.open(file_path) as img:
         return img.size
