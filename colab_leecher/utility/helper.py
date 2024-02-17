@@ -306,12 +306,12 @@ def get_audio_metadata(file_path):
 
     duration = round(float(audio.info.length))
     tags = audio.tags
-    artist = tags.get("artist") or tags.get("ARTIST") or tags.get("Artist")
-    title = tags.get("title") or tags.get("TITLE") or tags.get("Title")
+    artist = tags.get("artist")[0] or tags.get("ARTIST")[0] or tags.get("Artist")[0]
+    title = tags.get("title")[0] or tags.get("TITLE")[0] or tags.get("Title")[0]
     return duration, artist, title
 
 
-async def get_image_dimensions(file_path):
+def get_image_dimensions(file_path):
     with Image.open(file_path) as img:
         return img.size
 
