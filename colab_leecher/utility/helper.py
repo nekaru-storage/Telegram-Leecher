@@ -301,13 +301,9 @@ def speedETA(start, done, total):
 
 def get_audio_metadata(file_path):
     audio = File(file_path)
-    if audio is None:
-        return 0, None, None  # Return default values if file is not valid
-
-    duration = round(float(audio.info.length))
-    tags = audio.tags
-    artist = tags.get("artist")[0] or tags.get("ARTIST")[0] or tags.get("Artist")[0]
-    title = tags.get("title")[0] or tags.get("TITLE")[0] or tags.get("Title")[0]
+    duration = round(float(audio.info.length)) if audio and audio.info.length else 0
+    artist = audio.get("artist", [None])[0]
+    title = audio.get("title", [None])[0]
     return duration, artist, title
 
 
