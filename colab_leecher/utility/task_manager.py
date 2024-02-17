@@ -40,11 +40,9 @@ async def taskScheduler():
     )
     # Reset Texts
     Messages.download_name = ""
-    Messages.task_msg = f"<b>🦞 TASK MODE » </b>"
-    Messages.dump_task = (
-        Messages.task_msg
-        + f"<i>{BOT.Mode.type.capitalize()} {BOT.Mode.mode.capitalize()} as {BOT.Setting.stream_upload}</i>\n\n<b>🖇️ SOURCES » </b>"
-    )
+    Messages.task_msg = f"Task Mode == {BOT.Mode.type.capitalize()} Leech as {BOT.Setting.stream_upload}\nPlease Wait...."
+    Messages.dump_task = Messages.task_msg
+
     Transfer.sent_file = []
     Transfer.sent_file_names = []
     Transfer.down_bytes = [0, 0]
@@ -85,9 +83,9 @@ async def taskScheduler():
                 Messages.dump_task += code_link
                 
     # Get the current date and time in the specified time zone
-    cdt = datetime.now(pytz.timezone("Asia/Kolkata"))
-    dt = cdt.strftime(" %d-%m-%Y")
-    Messages.dump_task += f"\n\n<b>📆 Task Date » </b><i>{dt}</i>"
+    # cdt = datetime.now(pytz.timezone("Asia/Kolkata"))
+    # dt = cdt.strftime(" %d-%m-%Y")
+    # Messages.dump_task += f"\n\n📆 Task Date » <i>{dt}</i>"
 
     src_text.append(Messages.dump_task)
 
@@ -112,16 +110,16 @@ async def taskScheduler():
             MSG.sent_msg = await MSG.sent_msg.reply_text(text=src_text[lin], quote=True)
 
     Messages.src_link = f"https://t.me/c/{Messages.link_p}/{MSG.sent_msg.id}"
-    Messages.task_msg += f"__[{BOT.Mode.type.capitalize()} {BOT.Mode.mode.capitalize()} as {BOT.Setting.stream_upload}]({Messages.src_link})__\n\n"
+    Messages.task_msg += f"[{BOT.Mode.type.capitalize()} Leech as {BOT.Setting.stream_upload}]({Messages.src_link})\n\n"
 
     await MSG.status_msg.delete()
     img = Paths.THMB_PATH if ospath.exists(Paths.THMB_PATH) else Paths.HERO_IMAGE
-    MSG.status_msg = await colab_bot.send_photo(  # type: ignore
+    MSG.status_msg = await colab_bot.send_photo(
         chat_id=OWNER,
         photo=img,
         caption=Messages.task_msg
         + Messages.status_head
-        + f"\n📝 __Starting DOWNLOAD...__"
+        + f"\n📝 Starting DOWNLOAD..."
         + sysINFO(),
         reply_markup=keyboard(),
     )
@@ -144,6 +142,7 @@ async def taskScheduler():
         await Do_Leech(BOT.SOURCE, is_dir, BOT.Mode.ytdl, is_zip, is_unzip, is_dualzip)
     else:
         await Do_Mirror(BOT.SOURCE, BOT.Mode.ytdl, is_zip, is_unzip, is_dualzip)
+
 
 
 async def Do_Leech(source, is_dir, is_ytdl, is_zip, is_unzip, is_dualzip):

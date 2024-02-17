@@ -229,34 +229,24 @@ async def cancelTask(Reason: str):
 
 async def SendLogs(is_leech: bool):
     global Transfer, Messages
-    final_text = f"<b>☘️ File Count:</b>  <code>{len(Transfer.sent_file)}</code>\n\n<b>📜 Logs:</b>\n"
     l_ink = "⌬─────[「 Colab Usage 」](https://colab.research.google.com/drive/12hdEqaidRZ8krqj7rpnyDzg1dkKmvdvp)─────⌬"
 
     if is_leech:
-        file_count = (
-            f"├<b>☘️ File Count » </b><code>{len(Transfer.sent_file)} Files</code>\n"
-        )
+        file_count = f"☘️ File Count » <code>{len(Transfer.sent_file)} Files</code>\n"
     else:
         file_count = ""
 
-    size = (
-        sizeUnit(sum(Transfer.up_bytes))
-        if is_leech
-        else sizeUnit(Transfer.total_down_size)
-    )
+    size = sizeUnit(sum(Transfer.up_bytes)) if is_leech else sizeUnit(Transfer.total_down_size)
 
     last_text = (
-        f"\n\n<b>#{(BOT.Mode.mode).upper()}_COMPLETE 🔥</b>\n\n"
-        + f"╭<b>📛 Name » </b><code>{Messages.download_name}</code>\n"
-        + f"├<b>📦 Size » </b><code>{size}</code>\n"
+        f"📛 Name » <code>{Messages.download_name}</code>\n"
+        + f"📦 Size » <code>{size}</code>\n"
         + file_count
-        + f"╰<b>🍃 Saved Time »</b> <code>{getTime((datetime.now() - BotTimes.start_time).seconds)}</code>"
+        + f"🍃 Saved Time » <code>{getTime((datetime.now() - BotTimes.start_time).seconds)}</code>"
     )
 
     if BOT.State.task_going:
-        await MSG.sent_msg.reply_text(
-            text=f"**SOURCE »** __[Here]({Messages.src_link})__" + last_text
-        )
+        await MSG.sent_msg.reply_text(text=last_text)
         await MSG.status_msg.edit_text(
             text=Messages.task_msg + l_ink + last_text,
             reply_markup=InlineKeyboardMarkup(
@@ -283,24 +273,17 @@ async def SendLogs(is_leech: bool):
 
         if is_leech:
             try:
-                final_texts = []
+                final_text = ""
                 for i in range(len(Transfer.sent_file)):
-                    file_link = (
-                        f"https://t.me/c/{Messages.link_p}/{Transfer.sent_file[i].id}"
-                    )
+                    file_link = f"https://t.me/c/{Messages.link_p}/{Transfer.sent_file[i].id}"
                     fileName = Transfer.sent_file_names[i]
-                    fileText = (
-                        f"\n({str(i+1).zfill(2)}) <a href={file_link}>{fileName}</a>"
-                    )
+                    fileText = f"\n({str(i+1).zfill(2)}) <a href={file_link}>{fileName}</a>"
                     if len(final_text + fileText) >= 4096:
-                        final_texts.append(final_text)
+                        await MSG.status_msg.reply_text(text=final_text)
                         final_text = fileText
                     else:
                         final_text += fileText
-                final_texts.append(final_text)
-
-                for fn_txt in final_texts:
-                    MSG.status_msg = await MSG.status_msg.reply_text(text=fn_txt)
+                await MSG.status_msg.reply_text(text=final_text)
             except Exception as e:
                 Err = f"<b>Error Sending logs » </b><i>{e}</i>"
                 Err += f"\n\n<i>⚠️ If You are Unknown with this **ERROR**, Then Forward This Message in [Colab Leecher Discussion](https://t.me/Colab_Leecher_Discuss) Where [Xron Trix](https://t.me/XronTrix) may fix it</i>"
@@ -308,3 +291,4 @@ async def SendLogs(is_leech: bool):
 
     BOT.State.started = False
     BOT.State.task_going = False
+
