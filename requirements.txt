@@ -16,3 +16,4 @@ tgcrypto
 uvloop
 mutagen
 yt_dlp
+pymegatools
