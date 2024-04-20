@@ -223,7 +223,18 @@ def multipartArchive(path: str, type: str, remove: bool):
     name, _ = ospath.splitext(filename)
 
     c, size, rname = 1, 0, name
-    if type == "rar":
+    if type == "7z":
+        na_p = f"{name}.{str(c).zfill(3)}"
+        p_ap = ospath.join(dirname, na_p)
+        while ospath.exists(p_ap):
+            if remove:
+                os.remove(p_ap)
+            size += getSize(p_ap)
+            c += 1
+            na_p = f"{name}.{str(c).zfill(3)}"
+            p_ap = ospath.join(dirname, na_p)
+
+    elif type == "rar":
         name_, _ = ospath.splitext(name)
         rname = name_
         na_p = name_ + ".part" + str(c) + ".rar"
@@ -234,17 +245,6 @@ def multipartArchive(path: str, type: str, remove: bool):
             size += getSize(p_ap)
             c += 1
             na_p = name_ + ".part" + str(c) + ".rar"
-            p_ap = ospath.join(dirname, na_p)
-
-    elif type == "7z":
-        na_p = name + "." + str(c).zfill(3)
-        p_ap = ospath.join(dirname, na_p)
-        while ospath.exists(p_ap):
-            if remove:
-                os.remove(p_ap)
-            size += getSize(p_ap)
-            c += 1
-            na_p = name + "." + str(c).zfill(3)
             p_ap = ospath.join(dirname, na_p)
 
     elif type == "zip":

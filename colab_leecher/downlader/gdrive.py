@@ -45,12 +45,11 @@ async def getIDFromURL(link: str):
     if "folders" in link or "file" in link:
         regex = r"https:\/\/drive\.google\.com\/(?:drive(.*?)\/folders\/|file(.*?)?\/d\/)([-\w]+)"
         res = re_search(regex, link)
-        if res is None:
-            await cancelTask("G-Drive ID not found in Link.")
-            logging.error("G-Drive ID not found.")
-            return
-        else:
+        if res is not None:
             return res.group(3)
+        await cancelTask("G-Drive ID not found in Link.")
+        logging.error("G-Drive ID not found.")
+        return
     parsed = urlparse(link)
     return parse_qs(parsed.query)["id"][0]
 
