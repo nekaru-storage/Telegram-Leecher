@@ -4,10 +4,10 @@
 import os
 import math
 import psutil
+import mutagen
 import logging
 from time import time
 from PIL import Image
-from mutagen import File
 from os import path as ospath
 from datetime import datetime
 from urllib.parse import urlparse
@@ -299,11 +299,24 @@ def speedETA(start, done, total):
         speed, eta = "N/A", 0
     return speed, eta, percentage
 
-def get_audio_metadata(file_path):
-    audio = File(file_path)
+def get_audio_metadata(file_path: str):
+    try:
+        audio = mutagen.File(file_path)
+    except mutagen.mp3.HeaderNotFoundError:
+        return 0, None, None
+
+    # check if the file_path have extension .m4a
+    if file_path.lower().endswith('.m4a'):
+        title = audio.get('©nam', [None])[0]
+        artist = audio.get('©ART', [None])[0]
+    elif file_path.lower().endswith('.mp3'):
+        title = audio.get('TIT2', [None])[0] or audio.get('TITLE', ['No Title'])[0]
+        artist = audio.get('TPE1', [None])[0] or audio.get('TPE1', ['No Artist'])[0]
+    else:
+        title = audio.get('title', [None])[0]
+        artist = audio.get('artist', [None])[0]
+
     duration = round(float(audio.info.length)) if audio and audio.info.length else 0
-    artist = audio.get("artist", [None])[0]
-    title = audio.get("title", [None])[0]
     return duration, artist, title
 
 def get_image_dimensions(file_path):
