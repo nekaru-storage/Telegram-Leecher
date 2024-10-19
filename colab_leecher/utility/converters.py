@@ -38,7 +38,7 @@ async def videoConverter(file: str):
 
     async def msg_updater(c: int, tr, engine: str):
         global Messages
-        messg = f"╭「" + "░" * c + "█" + "░" * (11 - c) + "」"
+        messg = "╭「" + "░" * c + "█" + "░" * (11 - c) + "」"
         messg += f"\n├⏳ **Status »** __Running 🏃🏼‍♂️__\n├🕹 **Attempt »** __{tr}__"
         messg += f"\n├⚙️ **Engine »** __{engine}__\n├💪🏼 **Handler »** __{core}__"
         messg += f"\n╰🍃 **Time Spent »** __{getTime((datetime.now() - BotTimes.start_time).seconds)}__"
@@ -204,7 +204,7 @@ async def extract(zip_filepath, remove: bool):
     elif ext == ".gz":
         cmd = f"tar -zxvf '{zip_filepath}' -C {temp_unzip_path}"
     else:
-        cmd = f"7z x {p} '{zip_filepath}' -o{temp_unzip_path}"
+        cmd = f"7z x {p} '{zip_filepath}' -o{temp_unzip_path} -y"
         if ext == ".001":
             file_pattern = "7z"
         elif ext == ".z01":
