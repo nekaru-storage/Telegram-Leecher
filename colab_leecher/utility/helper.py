@@ -339,9 +339,12 @@ def create_duplicate_file(file_path):
 async def message_deleter(message1, message2):
     try:
         await message1.delete()
+    except Exception as e:
+        logging.error(f"MSG1 Delete Failed: {e}")
+    try:
         await message2.delete()
     except Exception as e:
-        logging.error(f"MSG Delete Failed: {e}")
+        logging.error(f"MSG2 Delete Failed: {e}")
 
 
 async def status_bar(down_msg, speed, percentage, eta, done, left, engine):
