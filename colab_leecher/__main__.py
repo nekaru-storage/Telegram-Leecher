@@ -203,6 +203,10 @@ async def handle_options(client, callback_query):
         keyboard = InlineKeyboardMarkup(
             [
                 [
+                    InlineKeyboardButton("Split Videos", callback_data="split-true"),
+                    InlineKeyboardButton("Zip Videos", callback_data="split-false"),
+                ],
+                [
                     InlineKeyboardButton("Convert", callback_data="convert-true"),
                     InlineKeyboardButton(
                         "Don't Convert", callback_data="convert-false"
@@ -287,7 +291,22 @@ async def handle_options(client, callback_query):
         await send_settings(
             client, callback_query.message, callback_query.message.id, False
         )
-    elif callback_query.data in ["convert-true", "convert-false", "mp4", "mkv", "q-High", "q-Low"]:
+    elif callback_query.data in ["split-true", "split-false"]:
+        BOT.Options.is_split = True if callback_query.data == "split-true" else False
+        BOT.Setting.split_video = (
+            "Split Videos" if callback_query.data == "split-true" else "Zip Videos"
+        )
+        await send_settings(
+            client, callback_query.message, callback_query.message.id, False
+        )
+    elif callback_query.data in [
+        "convert-true",
+        "convert-false",
+        "mp4",
+        "mkv",
+        "q-High",
+        "q-Low",
+    ]:
         if callback_query.data in ["convert-true", "convert-false"]:
             BOT.Options.convert_video = (
                 True if callback_query.data == "convert-true" else False
