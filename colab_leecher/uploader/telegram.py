@@ -96,33 +96,37 @@ async def upload_file(file_path, real_name):
             photo_width, photo_height = get_image_dimensions(file_path)
             file_size = get_file_size(file_path)
             width_height_total = photo_width + photo_height
-            if file_size <= 10 * 1024 * 1024 and width_height_total <= 10000 and photo_width / photo_height <= 20:
+            is_valid_photo = (
+                file_size <= 10 * 1024 * 1024 
+                and width_height_total <= 10000 
+                and photo_width / photo_height <= 20
+            )
+            
+            if is_valid_photo:
                 MSG.sent_msg = await MSG.sent_msg.reply_photo(
                     photo=file_path,
                     caption=caption,
                     progress=progress_bar,
                     reply_to_message_id=MSG.sent_msg.id,
                 )
+                
                 if width_height_total == 10000:
-                    # Create a duplicate file for archiving purposes
                     duplicate_path = await create_duplicate_file(file_path)
-                    await asyncio.sleep(15)  # Delay for 15 seconds
+                    await asyncio.sleep(15)
                     MSG.sent_msg = await MSG.sent_msg.reply_document(
                         document=duplicate_path,
                         caption="Archived Photo",
                         progress=progress_bar,
-                        reply_to_message_id=MSG.sent_msg.id,  # Reply to the original image
+                        reply_to_message_id=MSG.sent_msg.id,
                     )
             else:
                 MSG.sent_msg = await MSG.sent_msg.reply_document(
                     document=file_path,
                     caption=caption,
                     progress=progress_bar,
-                    thumb=thmb_path, # type: ignore
+                    thumb=thmb_path,
                     reply_to_message_id=MSG.sent_msg.id,
-                )
-
-
+                )        
         Transfer.sent_file.append(MSG.sent_msg)
         Transfer.sent_file_names.append(real_name)
 
