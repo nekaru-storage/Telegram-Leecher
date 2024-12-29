@@ -3,11 +3,13 @@
 
 import os
 import math
+import shutil
 import psutil
 import mutagen
 import logging
 from time import time
-from PIL import Image
+from PIL import Image, ImageOps
+from mutagen.wave import WAVE
 from os import path as ospath
 from datetime import datetime
 from urllib.parse import urlparse
@@ -315,17 +317,27 @@ def get_audio_metadata(file_path: str):
     elif file_path.lower().endswith('.mp3'):
         title = audio.get('TIT2', [None])[0] or audio.get('TITLE', ['No Title'])[0]
         artist = audio.get('TPE1', [None])[0] or audio.get('TPE1', ['No Artist'])[0]
-    else:
+    elif file_path.lower().endswith('.wav'):
+        audio = WAVE(file_path)
+        title = audio.get('title', [None])[0] or audio.get('INAM', ['No Title'])[0]
+        artist = audio.get('artist', [None])[0] or audio.get('IART', ['No Artist'])[0]
+        duration = round(float(audio.info.length)) if hasattr(audio.info, 'length') else 0 
+        return duration, artist, title    
+    else:    
         title = audio.get('title', [None])[0]
         artist = audio.get('artist', [None])[0]
 
-    duration = round(float(audio.info.length)) if audio and audio.info.length else 0
+    duration = round(float(audio.info.length)) if audio and hasattr(audio.info, 'length') else 0
     return duration, artist, title
 
 def get_image_dimensions(file_path):
-    with Image.open(file_path) as img:
-        return img.size
-
+    with open(file_path, 'rb') as img_file:
+        try:
+            img = ImageOps.exif_transpose(Image.open(img_file))
+        except:
+            img = Image.open(img_file)
+        return img.size   
+     
 def get_file_size(file_path):
     try:
         return os.path.getsize(file_path)
@@ -334,9 +346,12 @@ def get_file_size(file_path):
 
 def create_duplicate_file(file_path):
     duplicate_path = "duplicate_" + os.path.basename(file_path)
-    with open(file_path, 'rb') as file:
-        with open(duplicate_path, 'wb') as duplicate_file:
-            duplicate_file.write(file.read())
+    if os.path.getsize(file_path) > 10 * 1024 * 1024:  # 10 MB
+        shutil.copy(file_path, duplicate_path)
+    else:
+        with open(file_path, 'rb') as file:
+            with open(duplicate_path, 'wb') as duplicate_file:
+                duplicate_file.write(file.read())
     return duplicate_path
 
 async def message_deleter(message1, message2):
