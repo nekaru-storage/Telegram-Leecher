@@ -10,6 +10,7 @@ import logging
 from time import time
 from PIL import Image, ImageOps
 from mutagen.wave import WAVE
+from tinytag import TinyTag
 from os import path as ospath
 from datetime import datetime
 from urllib.parse import urlparse
@@ -318,18 +319,21 @@ def get_audio_metadata(file_path: str):
         title = audio.get('TIT2', [None])[0] or audio.get('TITLE', ['No Title'])[0]
         artist = audio.get('TPE1', [None])[0] or audio.get('TPE1', ['No Artist'])[0]
     elif file_path.lower().endswith('.wav'):
-        audio = WAVE(file_path)
-        title = audio.get('title', [None])[0] or audio.get('INAM', ['No Title'])[0]
-        artist = audio.get('artist', [None])[0] or audio.get('IART', ['No Artist'])[0]
-        duration = round(float(audio.info.length)) if hasattr(audio.info, 'length') else 0 
-        return duration, artist, title    
+        try:
+            audiowav = TinyTag.get(file_path)
+            audio1 = WAVE(file_path)
+            title = audiowav.title or 'No Title'
+            artist = audiowav.artist or 'No Artist'
+            duration = round(float(audio1.info.length)) if hasattr(audio1.info, 'length') else 0
+            return duration, artist, title
+        except:
+            return 0, None, None
     else:    
         title = audio.get('title', [None])[0]
         artist = audio.get('artist', [None])[0]
 
     duration = round(float(audio.info.length)) if audio and hasattr(audio.info, 'length') else 0
     return duration, artist, title
-
 def get_image_dimensions(file_path):
     with open(file_path, 'rb') as img_file:
         try:
